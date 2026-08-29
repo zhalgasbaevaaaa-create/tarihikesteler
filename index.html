@@ -32,6 +32,21 @@ perestroika: 'assets/img/era_perestroika.jpg',
 independence: 'assets/img/era_independence.jpg'
 };
 function eraImg(sec) { return ERA_IMG[sec.era] || ERA_IMG.empire; }
+/* graceful fallback if an era image is unavailable */
+var MISSING_IMG = {};
+Object.keys(ERA_IMG).forEach(function (k) {
+var probe = new Image();
+probe.onerror = function () {
+MISSING_IMG[k] = true;
+if (!fs || fs.hidden) renderCards();
+};
+probe.src = ERA_IMG[k];
+});
+function bgFor(sec) {
+var k = sec.era;
+if (MISSING_IMG[k]) return ERA_IMG.empire;
+return ERA_IMG[k] || ERA_IMG.empire;
+}
 function $(s, r) { return (r || document).querySelector(s); }
 function esc(t) {
 return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -119,7 +134,7 @@ var rows = 0;
 s.blocks.forEach(function (b) { rows += b.rows.length; });
 var pages = s.pages[0] + (s.pages.length > 1 ? '–' + s.pages[s.pages.length - 1] : '');
 html += '<button type="button" class="card" data-s="' + s.id + '" aria-label="' + esc(s.title) + '">' +
-'<span class="card-bg" style="background-image:url(\'' + eraImg(s) + '\')" aria-hidden="true"></span>' +
+'<span class="card-bg" style="background-image:url(\'' + bgFor(s) + '\')" aria-hidden="true"></span>' +
 '<span class="card-body">' +
 '<span class="card-num">КЕСТЕ № ' + (s.id < 10 ? '0' : '') + s.id + '</span>' +
 '<h3>' + esc(s.title) + '</h3>' +
@@ -251,7 +266,7 @@ if (!s) return;
 curId = id;
 opts = opts || {};
 var tokens = opts.tokens || null;
-fsBg.style.backgroundImage = 'url(\'' + eraImg(s) + '\')';
+fsBg.style.backgroundImage = 'url(\'' + bgFor(s) + '\')';
 fsKicker.textContent = 'Қазақстан тарихы — көмекші кестелер · Кесте № ' + s.id + ' · PDF ' + s.pages.join(', ') + '-бет';
 fsTitle.textContent = s.title;
 fsPanel.innerHTML = tableHtml(s, tokens);
